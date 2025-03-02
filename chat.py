@@ -11,6 +11,8 @@ import time
 from config import LLM, DATABASE  
 
 store = {}
+session_id = "abc123"
+last_interaction_time = time.time() # 마지막 입력 시간
 current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 print(f"현재 날짜 및 시간: {current_date}")
 
@@ -29,6 +31,18 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
     if session_id not in store:
         store[session_id] = ChatMessageHistory()
     return store[session_id]
+
+# 세션의 대화 기록을 삭제
+def reset_session(session_id: str):
+    if session_id in store:
+        del store[session_id]
+        print("🔄 대화 기록이 초기화되었습니다.")
+
+def reset_if_idle(timeout=60):
+    global last_interaction_time, session_id
+    if time.time() - last_interaction_time > timeout:
+        reset_session(session_id)
+        last_interaction_time = time.time
 
 # Pinecone 검색 설정 (전역 DATABASE 사용)
 def get_retriever():
@@ -98,7 +112,7 @@ def create_rag_chain():
 # ✅ RAG 체인을 전역으로 선언하여 재사용
 RAG_CHAIN = create_rag_chain()
 
-def get_ai_response(user_message, session_id="abc123"):
+def get_ai_response(user_message, session_id):
     ai_response_stream = RAG_CHAIN.stream(
         {"input": user_message},
         config={"configurable": {"session_id": session_id}},
@@ -106,14 +120,21 @@ def get_ai_response(user_message, session_id="abc123"):
     return ai_response_stream
 
 def chat():
-    print("🚏 울진 AI 챗봇 🤖 (종료: 'exit')")
+    global last_interaction_time
+    print("🚏 울진 AI 챗봇 🤖 (종료: 'exit', 초기화: 'reset')")
     
     while True:
+        reset_if_idle()
         user_input = input("👤: ")
-        if user_input.lower() == "exit":
+        last_interaction_time = time.time() #입력이 들어오면 시간 갱신
+        if user_input.lower() == "e":
             print("👋 챗봇을 종료합니다.")
             break
-        ai_response = get_ai_response(user_input)
+        elif user_input.lower() == "r":
+            reset_session(session_id)
+            continue # 새로운 입력을 받도록 반복문 유지
+
+        ai_response = get_ai_response(user_input, session_id)
         print("🤖:", end=" ")
         for chunk in ai_response:
             print(chunk, end="", flush=True)
