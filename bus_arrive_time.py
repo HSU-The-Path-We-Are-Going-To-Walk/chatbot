@@ -1,6 +1,6 @@
 import requests
 import xml.etree.ElementTree as ET
-from dotenv import load_dotenv
+
 import os
 
 SERVICE_KEY = os.getenv("SERVICE_KEY")
@@ -8,7 +8,7 @@ SERVICE_KEY = os.getenv("SERVICE_KEY")
 # API 요청
 url = 'http://apis.data.go.kr/1613000/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList'
 params = {
-    'serviceKey': '',
+    'serviceKey': SERVICE_KEY,
     'pageNo': '1',
     'numOfRows': '10',
     '_type': 'xml',

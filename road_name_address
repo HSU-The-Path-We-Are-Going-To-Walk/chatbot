@@ -1,0 +1,31 @@
+import requests
+from dotenv import loadenv
+
+ROAD_NAME_ADDRESS = os.getenv("ROAD_NAME_ADDRESS")
+
+# API 요청 URL
+url = "https://business.juso.go.kr/addrlink/addrLinkApi.do"
+params = {
+    "currentPage": 1,
+    "countPerPage": 1,
+    "keyword": ,
+    "confmKey": ROAD_NAME_ADDRESS,
+    "firstSort": "road",
+    "resultType": "json"  # JSON 형식으로 응답받기
+}
+
+# API 요청
+response = requests.get(url, params=params)
+
+# 응답 데이터 확인 및 roadAddr 값 추출
+if response.status_code == 200:
+    data = response.json()  # JSON 형식으로 변환
+    results = data.get("results", {}).get("juso", [])
+    
+    if results:
+        road_addr = results[0].get("roadAddr", "도로명 주소 없음")
+        print(f"📍 도로명 주소: {road_addr}")
+    else:
+        print("❌ 주소 데이터를 찾을 수 없습니다.")
+else:
+    print(f"❌ API 요청 실패: {response.status_code}")
