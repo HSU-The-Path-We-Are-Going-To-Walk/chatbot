@@ -40,7 +40,7 @@ def get_coordinates(address):
 
 # main 함수 추가
 if __name__ == "__main__":
-    test_address = "전남 고흥군 도덕면 당남길 124"
+    test_address = "전남 고흥군 고흥읍 여산당촌길 19"
     x, y = get_coordinates(test_address)
 
     if x and y:

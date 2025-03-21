@@ -44,8 +44,8 @@ def get_bus_arrival_info(gpsLati, gpsLong, page_no='1', num_of_rows='10'):
 
 if __name__ == "__main__":
     # 예제: 특정 좌표(고흥터미널 근처 좌표)로 테스트
-    gpsLati = 34.607249
-    gpsLong = 127.280914
+    gpsLati = 34.6047049
+    gpsLong = 127.2755070
 
     bus_stations = get_bus_arrival_info(gpsLati, gpsLong)
     

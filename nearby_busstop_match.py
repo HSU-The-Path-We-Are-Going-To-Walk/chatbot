@@ -47,6 +47,7 @@ def get_bus_arrival_info(gpsLati, gpsLong, page_no='1', num_of_rows='10'):
     bus_stations = []
     
     print(f"API 응답 코드: {response.status_code}")
+    print(response.content)
     
     # XML 파싱
     try:
@@ -59,6 +60,9 @@ def get_bus_arrival_info(gpsLati, gpsLong, page_no='1', num_of_rows='10'):
             
             bus_stations.append((busstop_name, busstop_id))
             print(bus_stations)
+        
+        if not bus_stations:
+            print("주변에 버스 정류장이 없습니다.")
         
     except Exception as e:
         print(f"오류 발생: {e}")
@@ -124,32 +128,43 @@ def get_nearby_bus_info(gpsLati, gpsLong, page_no='1', num_of_rows='10'):
     """
     # 주변 버스 정류장 정보 가져오기
     bus_stations = get_bus_arrival_info(gpsLati, gpsLong, page_no, num_of_rows)
-    
+    print(bus_stations)
+
+    if not bus_stations:
+        return {
+            "status" : "주변_정류장_없음",
+            "message" : "해당 위치에서 가까운 정류장이 없습니다."
+        }
     # 각 정류장별로 버스 번호 조회
     result = []
     
     for station_name, station_id in bus_stations:
-        # 정류장을 지나는 버스 번호 조회
         bus_numbers = get_bus_numbers_by_node_id(station_id)
-        
-        # 결과 리스트에 추가
-        result.append((station_name, station_id, bus_numbers))
-    
-    return result
+        result.append({
+            "station_name": station_name,
+            "station_id": station_id,
+            "bus_numbers": bus_numbers
+        })
+
+    return {
+        "status": "주변_정류장_조회_완료",
+        "bus_stations": result
+    }
 
 if __name__ == "__main__":
-    # 예제: 특정 좌표(고흥터미널 근처 좌표)로 테스트
-    gpsLati = 34.607249
-    gpsLong = 127.280914
-    
+    gpsLati = 34.6073934
+    gpsLong = 127.2810466
+
     nearby_bus_info = get_nearby_bus_info(gpsLati, gpsLong)
-    
-    # 결과 출력
-    print("\n🚏 주변 버스 정류장 및 버스 정보:")
-    for name, node_id, bus_numbers in nearby_bus_info:
-        print(f"정류장 이름: {name}, 정류장 ID: {node_id}")
-        if bus_numbers:
-            print(f"  버스 번호: {', '.join(bus_numbers)}")
-        else:
-            print("  버스 정보 없음")
-        print("-" * 40)
+
+    if nearby_bus_info["status"] == "주변_정류장_없음":
+        print("\n🚫 주변에 버스 정류장이 없습니다.")
+    else:
+        print("\n🚏 주변 버스 정류장 및 버스 정보:")
+        for station in nearby_bus_info["bus_stations"]:
+            print(f"정류장 이름: {station['station_name']}, 정류장 ID: {station['station_id']}")
+            if station['bus_numbers']:
+                print(f"  버스 번호: {', '.join(station['bus_numbers'])}")
+            else:
+                print("  버스 정보 없음")
+            print("-" * 40)

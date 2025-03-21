@@ -67,7 +67,7 @@ def find_path(destination):
     try:
         result = kakao_places.search_keyword_top1(destination)
         
-        print(f"🔍 검색된 장소 결과: {result}") 
+        print(f"🔍 검색된 장소 결과: {result}")
         place_name, x, y = result
 
         print(f"🔍 검색된 장소: {place_name}, 좌표: ({x}, {y})")  
@@ -98,74 +98,82 @@ def find_places(destination):
     
 def match_buses(destination):
     x, y = kakao_places.search_keyword_top1(destination)
-    match_bus_numbers = nearby_busstop_match.get_nearby_bus_info(x, y)
+    nearby_bus_info = nearby_busstop_match.get_nearby_bus_info(x, y)
+
+    # 주변 정류장이 없을 경우 처리
+    if nearby_bus_info.get("status") == "주변_정류장_없음":
+        print("🚫 주변 정류장이 없습니다. 길찾기 수행.")
+        return [], []  # ✅ 항상 두 개의 값 반환
+
+    match_bus_numbers = []
+
+    # 정류장 리스트를 순회하면서 버스 번호 추출
+    for station in nearby_bus_info.get("bus_stations", []):
+        bus_numbers = station.get("bus_numbers", [])
+        if isinstance(bus_numbers, list):
+            match_bus_numbers.extend(bus_numbers)
+    
+    match_bus_numbers = [str(num) for num in match_bus_numbers]
+
     arrival_info = bus_arrive_time.get_bus_arrival_info()
 
     # 두 리스트를 비교하여 일치하는 버스만 필터링
     matching_arrivals = []
     for bus_info in arrival_info:
-        bus_number = bus_info[0]  # 버스 번호
-        arrival_time = bus_info[1]  # 도착 예정 시간(분)
+        if not isinstance(bus_info, (list, tuple)) or len(bus_info) < 2:
+            continue
+
+        bus_number = str(bus_info[0])
+        arrival_time = bus_info[1]
         
         print(f"🔍 비교: 노선버스 {bus_number} vs 주변버스 {match_bus_numbers}")
         
-        # 버스 번호가 문자열인 경우 정수로 변환 시도
-        try:
-            bus_number_int = int(bus_number)
-        except ValueError:
-            bus_number_int = bus_number
+        bus_number_int = str(bus_info[0])
+        arrival_time = bus_info[1]
         
         if bus_number_int in match_bus_numbers:
             bus_arrival_info = {
                 "버스번호": bus_number,
                 "도착예정시간": f"{arrival_time}분 후",
                 "도착시간(분)": arrival_time
-            }
+            } 
             matching_arrivals.append(bus_arrival_info)
     
     matching_arrivals.sort(key=lambda x: x["도착시간(분)"])
+    
     return match_bus_numbers, matching_arrivals
 
+
 def intent_func(intent, destination):
-    
     if intent == "버스 노선":
-        print("버스 노선 의도 처리")
-    #     try:
-    #         match_bus_numbers, matching_arrivals = match_buses(destination)
-            
-    #         # 케이스 1: 일치하는 버스가 있고 도착 정보도 있는 경우
-    #         if match_bus_numbers and matching_arrivals:
-    #             print(f"✅ 케이스 1: 버스_도착정보_있음")
-    #             return {
-    #                 "status": "버스_도착정보_있음",
-    #                 "match_buses": match_bus_numbers,
-    #                 "arrival_info": matching_arrivals
-    #             }
-            
-    #         # 케이스 2: 일치하는 버스는 있지만 도착 정보가 없는 경우
-    #         elif match_bus_numbers and not matching_arrivals:
-    #             print(f"✅ 케이스 2: 버스_도착정보_없음")
-    #             return {
-    #                 "status": "버스_도착정보_없음",
-    #                 "match_buses": match_bus_numbers
-    #             }
-            
-    #         # 케이스 3: 일치하는 버스 목록도 없는 경우 - 길찾기 수행
-    #         else:
-    #             directions, place_name = find_path(destination)
-    #             route_descriptions = [desc for desc, _ in directions]  # route_desc만 추출
-    #             return {
-    #                 "status": "길찾기_수행",
-    #                 "route": route_descriptions,
-    #                 "place_name": place_name
-    #             }
-                
-    #     except Exception as e:
-    #         print(f"❌ 버스 노선 처리 중 오류 발생: {str(e)}")
-    #         import traceback
-    #         print(f"❌ 상세 오류: {traceback.format_exc()}")
-    #         return f"버스 노선 검색 중 오류가 발생했습니다: {str(e)}", None
-    
+        try: 
+            print(f"🚌 '버스 노선' 의도 처리 시작")
+            match_bus_numbers, matching_arrivals = match_buses(destination)
+            if matching_arrivals:
+                result = {
+                    "status" : "버스_도착정보_있음",
+                    "match_buses" : match_bus_numbers,
+                    "arrival_info" : matching_arrivals
+                }
+                return result
+            elif match_bus_numbers:
+                result = {
+                    "status" : "버스_도착정보_없음",
+                    "match_buses" : match_bus_numbers
+                }
+                return result
+            else:
+                route, place_name = find_path(destination)
+                result = {
+                    "status" : "길찾기_수행",
+                    "route" : route,
+                    "place_name" : destination
+                }
+                return result
+        except Exception as e:
+            print(f"❌ 버스 노선 처리 중 오류 발생: {str(e)}")
+            return f"버스 노선 처리 중 오류가 발생했습니다: {str(e)}", None
+        
     elif intent == "길찾기" and destination:
         print(f"🚶 '길찾기' 의도 처리 시작")
         try:
@@ -289,6 +297,7 @@ def create_rag_chain():
     system_prompt = (
         f"오늘 날짜는 {current_date}입니다.\n"
         "당신은 고흥군 버스정류장에서 사람들과 대화하는 친근한 AI 챗봇입니다.\n"
+        "필요에 따라 공지 정보를 활용하여 답변하세요\n"
         "반드시 존댓말로 대화하세요.\n"
         "사람들이 질문하기 전에 먼저 관심을 표현하고, 편안하게 대화를 이어갈 수 있도록 하세요.\n" # 트리거 연동 시 변경해야 할 부분
         "출력은 오디오로 제공되므로 마크다운 형식(예: `**강조**`, `- 리스트`, `[링크](url)`, ````코드````)을 사용하지 말고, 평범한 일상 대화처럼 부드럽고 자연스럽게 문장을 구성하세요.\n"
@@ -322,6 +331,10 @@ def get_ai_response(user_message, session_id, rag_chain):
         config={"configurable": {"session_id": session_id}},
     )
     return ai_response_stream
+
+
+##### chat #####
+
 
 def chat():
     global last_interaction_time
@@ -374,36 +387,36 @@ def chat():
                     formatted_result = intent_prompting(route_data, place_name or destination)
                     print(f"🤖: {formatted_result}")
                 
-                # # 버스 노선일 경우 (딕셔너리 반환)
-                # elif intent == "버스 노선" and isinstance(result, dict):
-                #     status = result.get("status")
+                # 버스 노선일 경우 (딕셔너리 반환)
+                elif intent == "버스 노선" and isinstance(result, dict):
+                    status = result.get("status")
                     
-                #     # 케이스 1: 일치하는 버스가 있고 도착 정보도 있는 경우
-                #     if status == "버스_도착정보_있음":
-                #         match_buses = result.get("match_buses")
-                #         arrival_info = result.get("arrival_info")
+                    # 케이스 1: 일치하는 버스가 있고 도착 정보도 있는 경우
+                    if status == "버스_도착정보_있음":
+                        match_buses = result.get("match_buses")
+                        arrival_info = result.get("arrival_info")
                         
-                #         bus_list = ", ".join([str(bus) for bus in match_buses])
-                #         arrival_text = "\n".join([f"{info['버스번호']}번 버스: {info['도착예정시간']}" for info in arrival_info])
+                        bus_list = ", ".join([str(bus) for bus in match_buses])
+                        arrival_text = "\n".join([f"{info['버스번호']}번 버스: {info['도착예정시간']}" for info in arrival_info])
                         
-                #         response = f"'{destination}'(으)로 가는 버스: {bus_list}\n\n현재 도착 정보:\n{arrival_text}"
-                #         print(f"🤖: {response}")
+                        response = f"'{destination}'(으)로 가는 버스: {bus_list}\n\n현재 도착 정보:\n{arrival_text}"
+                        print(f"🤖: {response}")
                     
-                #     # 케이스 2: 일치하는 버스는 있지만 도착 정보가 없는 경우
-                #     elif status == "버스_도착정보_없음":
-                #         match_buses = result.get("match_buses")
-                #         bus_list = ", ".join([str(bus) for bus in match_buses])
+                    # 케이스 2: 일치하는 버스는 있지만 도착 정보가 없는 경우
+                    elif status == "버스_도착정보_없음":
+                        match_buses = result.get("match_buses")
+                        bus_list = ", ".join([str(bus) for bus in match_buses])
                         
-                #         response = f"'{destination}'(으)로 가는 버스: {bus_list}\n\n현재 도착 예정인 버스가 없습니다."
-                #         print(f"🤖: {response}")
+                        response = f"'{destination}'(으)로 가는 버스: {bus_list}\n\n현재 도착 예정인 버스가 없습니다."
+                        print(f"🤖: {response}")
                     
-                #     # 케이스 3: 일치하는 버스 목록도 없는 경우 - 길찾기 수행
-                #     elif status == "길찾기_수행":
-                #         route_data = result.get("route")
-                #         place_name = result.get("place_name")
+                    # 케이스 3: 일치하는 버스 목록도 없는 경우 - 길찾기 수행
+                    elif status == "길찾기_수행":
+                        route_data = result.get("route")
+                        place_name = result.get("place_name")
                         
-                #         formatted_result = intent_prompting(route_data, place_name or destination)
-                #         print(f"🤖: {destination}(으)로 가는 버스가 없습니다. 대신 길찾기 결과를 알려드립니다.\n{formatted_result}")
+                        formatted_result = intent_prompting(route_data, place_name or destination)
+                        print(f"🤖: {destination}(으)로 가는 버스가 없습니다. 대신 길찾기 결과를 알려드립니다.\n{formatted_result}")
                 
                 # 문자열 결과일 경우 (에러 메시지 등)
                 elif isinstance(result, str):
