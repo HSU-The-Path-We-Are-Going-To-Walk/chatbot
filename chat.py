@@ -98,7 +98,7 @@ def find_places(destination):
     
 def match_buses(destination):
     _, x, y = kakao_places.search_keyword_top1(destination)
-    nearby_bus_info = nearby_busstop_match.get_nearby_bus_info(x, y)
+    nearby_bus_info = nearby_busstop_match.get_nearby_bus_info(y, x)
 
     # 주변 정류장이 없을 경우 처리
     if nearby_bus_info.get("status") == "주변_정류장_없음":
