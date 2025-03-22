@@ -52,6 +52,9 @@ def get_bus_arrival_info(city_code='36350', node_id='TSB332000523', page_no='1',
             
         # 더미 데이터 => 시연 목적
         bus_arrivals.append((110, 10))
+        bus_arrivals.append((111, 15))
+        bus_arrivals.append((112, 5))
+        
         bus_arrivals.sort(key=lambda x: x[1])
     except Exception as e:
         print(f"오류 발생: {e}")

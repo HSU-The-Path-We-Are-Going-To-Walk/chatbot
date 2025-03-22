@@ -72,11 +72,15 @@ def find_path(destination):
 
         print(f"🔍 검색된 장소: {place_name}, 좌표: ({x}, {y})")  
         directions = path_sk.get_transit_route(x, y)
+
+        if isinstance(directions, dict) and "error" in directions:
+            return directions['error'], place_name
+
         return directions, place_name
 
     except Exception as e:
         print(f"❌ 경로 찾기 중 오류 발생: {str(e)}")  
-        return f"경로 찾기 중 오류 발생: {str(e)}"
+        return f"경로 찾기 중 오류 발생: {str(e)}", None
     
 def find_places(destination):
     try:
@@ -125,8 +129,6 @@ def match_buses(destination):
 
         bus_number = str(bus_info[0])
         arrival_time = bus_info[1]
-        
-        print(f"🔍 비교: 노선버스 {bus_number} vs 주변버스 {match_bus_numbers}")
         
         bus_number_int = str(bus_info[0])
         arrival_time = bus_info[1]
@@ -200,54 +202,90 @@ def intent_func(intent, destination):
     return None, None
 
 def intent_prompting(route_data, place_name):
-
-    print(route_data)
+    print(f"🔍 경로 데이터: {route_data}")
     
-    if route_data == "출발지와 도착지가 너무 가까움":
-        return f"{place_name}은 현재 위치에서 가까운 거리에 있습니다. 도보로 이동 가능합니다."
-    
-    elif route_data == "검색 결과가 없습니다. 다시 시도해 주세요" or route_data is None:
-        return f"{place_name}까지의 경로를 찾을 수 없습니다. 다른 장소를 검색해 보시겠어요?"
-    
-    elif isinstance(route_data, str) and route_data.startswith("경로 찾기 중 오류"):
-        return f"{place_name}까지의 경로를 검색하는 중에 문제가 발생했습니다. 잠시 후 다시 시도해 주세요."
-    
-    elif not route_data or route_data.strip() == "":
-        return f"{place_name}까지의 경로 정보가 없습니다."
-
-    prompt = f"""
-    다음은 이동 경로 데이터입니다. 
-    
-    {route_data}
-
-    🔹 **출력 규칙** 🔹
-    1. "출발지"를 항상 "현재 위치"로 변경하세요.
-    2. 도착지를 "{place_name}"으로 변경하세요.
-    3. **모든 역 이름에는 '역'을 붙여야 합니다.**  
-       - 예: 학림 → 학림역, 고흥터미널 → 고흥터미널역, 강남 → 강남역
-    4. 잘못된 예시는 절대 출력하지 마세요.  
-       - ❌ "고흥터미널에서 고흥터미널까지 도보 이동" (같은 장소에서 이동 X)
-    5. 같은 번호의 대체 가능한 버스 정보를 삭제하지 마세요.
-    6. 불필요한 문장은 제거하고 **순수한 길찾기 정보만 출력**하세요.
-
-    🔹 **출력 예시** 🔹
-    ✅ **올바른 출력**
-    1. 현재 위치에서 고흥동초교역까지 도보 이동
-    2. 고흥동초교역에서 고흥터미널역까지 농어촌:140 이용
-    3. 고흥터미널역에서 고흥군청까지 도보 이동
-
-    ❌ **잘못된 출력**
-    - "학림에서 고흥터미널까지 농어촌:140 이용"  (🚫 '역'이 빠짐)
-    - "고흥터미널에서 고흥터미널까지 도보로 이동" (🚫 같은 장소 반복 이동)
-    """
-
     try:
-        result = LLM.invoke(prompt).content
-        return result.strip()
-    
+        # 장소명으로 좌표 검색 (올바른 언패킹)
+        result = kakao_places.search_keyword_top1(place_name)
+        if result and len(result) == 3:
+            place_name, x, y = result
+            print(f"🔍 좌표 검색 결과: {place_name}, X: {x}, Y: {y}")
+            coordinates = [x, y]
+        else:
+            print("⚠️ 좌표 검색 실패")
+            coordinates = []
     except Exception as e:
-        print(f"❌ 오류 발생: {str(e)}")
-        return route_data
+        print(f"❌ 좌표 검색 중 오류: {str(e)}")
+        coordinates = []
+    
+    # 출발지와 도착지가 너무 가까운 경우
+    if route_data == "출발지와 도착지가 너무 가까움":
+        routes_text = f"{place_name}은 현재 위치에서 가까운 거리에 있습니다. 도보로 이동 가능합니다."
+        formatted_coordinates = f"좌표: {coordinates}" if coordinates else ""
+        return {
+            "place_name": place_name,
+            "routes_text": routes_text,
+            "formatted_coordinates": formatted_coordinates
+        }
+    
+    # 검색 결과가 없는 경우
+    elif route_data == "검색 결과가 없습니다. 다시 시도해 주세요" or route_data is None:
+        routes_text = f"{place_name}까지의 경로를 찾을 수 없습니다. 다른 장소를 검색해 보시겠어요?"
+        formatted_coordinates = f"좌표: {coordinates}" if coordinates else ""
+        return {
+            "place_name": place_name,
+            "routes_text": routes_text,
+            "formatted_coordinates": formatted_coordinates
+        }
+    
+    # 오류 발생 경우
+    elif isinstance(route_data, str) and route_data.startswith("경로 찾기 중 오류"):
+        routes_text = f"{place_name}까지의 경로를 검색하는 중에 문제가 발생했습니다. 잠시 후 다시 시도해 주세요."
+        formatted_coordinates = f"좌표: {coordinates}" if coordinates else ""
+        return {
+            "place_name": place_name,
+            "routes_text": routes_text,
+            "formatted_coordinates": formatted_coordinates
+        }
+    
+    # 빈 경로 데이터
+    elif not route_data or (isinstance(route_data, str) and route_data.strip() == ""):
+        routes_text = f"{place_name}까지의 경로 정보가 없습니다."
+        formatted_coordinates = f"좌표: {coordinates}" if coordinates else ""
+        return {
+            "place_name": place_name,
+            "routes_text": routes_text,
+            "formatted_coordinates": formatted_coordinates
+        }
+    
+    # 경로 데이터가 리스트 형태인 경우 처리
+    if isinstance(route_data, list):
+        routes = []
+        route_coordinates = []
+        
+        for idx, item in enumerate(route_data, start=1):
+            if isinstance(item, tuple) and len(item) == 2:
+                description, coords = item
+                routes.append(f"{idx}. {description}")
+                route_coordinates.extend(coords)
+        
+        routes_text = "\n".join(routes)
+        formatted_coordinates = f"좌표: {route_coordinates}" if route_coordinates else f"좌표: {coordinates}"
+        
+        return {
+            "place_name": place_name,
+            "routes_text": f"{place_name}까지의 경로:\n{routes_text}",
+            "formatted_coordinates": formatted_coordinates
+        }
+    
+    # 그 외 경우
+    else:
+        print(f"❌ 알 수 없는 형식의 경로 데이터")
+        formatted_coordinates = f"좌표: {coordinates}" if coordinates else ""
+        return {
+            "place_name": place_name,
+            "routes_text": "길찾기 결과를 표시할 수 없어요. 다시 시도해 주세요"
+        }
 
 
 def get_session_history(session_id: str) -> BaseChatMessageHistory:
@@ -381,11 +419,16 @@ def chat():
                     else:
                         print(f"🤖: '{destination}'에 대한 검색 결과가 없습니다.")
                 
-                # 길찾기일 경우 (튜플 반환: route_data, place_name)
                 elif intent == "길찾기" and isinstance(result, tuple) and len(result) == 2:
                     route_data, place_name = result
                     formatted_result = intent_prompting(route_data, place_name or destination)
-                    print(f"🤖: {formatted_result}")
+                    
+                    # 반환된 딕셔너리에서 값 추출하여 출력
+                    place = formatted_result.get("place_name", "")
+                    routes = formatted_result.get("routes_text", "")
+                    coords = formatted_result.get("formatted_coordinates", "")
+                    
+                    print(f"🤖: {routes}\n{coords}")
                 
                 # 버스 노선일 경우 (딕셔너리 반환)
                 elif intent == "버스 노선" and isinstance(result, dict):
@@ -416,7 +459,10 @@ def chat():
                         place_name = result.get("place_name")
                         
                         formatted_result = intent_prompting(route_data, place_name or destination)
-                        print(f"🤖: {destination}(으)로 가는 버스가 없습니다. 대신 길찾기 결과를 알려드립니다.\n{formatted_result}")
+                        routes = formatted_result.get("routes_text", "")
+                        coords = formatted_result.get("formatted_coordinates", "")
+                        
+                        print(f"🤖: {destination}(으)로 가는 버스가 없습니다. 대신 길찾기 결과를 알려드립니다.\n{routes}\n{coords}")
                 
                 # 문자열 결과일 경우 (에러 메시지 등)
                 elif isinstance(result, str):
