@@ -2,7 +2,7 @@ import requests
 import json
 from dotenv import load_dotenv
 import os
-import bus_arrive_time
+import external_apis.bus_arrive_time as bus_arrive_time
 
 # 환경 변수 로드
 load_dotenv()
