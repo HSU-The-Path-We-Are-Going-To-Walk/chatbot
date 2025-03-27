@@ -1,3 +1,17 @@
 fastapi==0.104.1
 uvicorn==0.24.0
-pydantic==2.4.2
+python-dotenv==1.0.1
+pydantic==2.10.6
+pydantic-settings==2.8.0
+requests==2.32.3
+python-magic==0.4.27
+langchain==0.3.21
+langchain-openai==0.3.10
+openai==1.68.2
+chromadb==0.6.3
+spacy==3.7.2
+langchain-pinecone==0.2.3
+pinecone-client==3.0.2
+langchain-community==0.3.18
+PyMySQL==1.1.1
+ko_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/ko_core_news_sm-3.7.0/ko_core_news_sm-3.7.0-py3-none-any.whl#sha256=b1a15a4987a8f9835031a6bd2fe57fe158097ab5304221c41df1bd4aab8cf458

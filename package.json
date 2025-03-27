@@ -1,0 +1,26 @@
+{
+  "dependencies": {
+    "xapi": "^0.0.1"
+  },
+  "name": "chatbot",
+  "version": "1.0.0",
+  "main": "cisco.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HSU-The-Path-We-Are-Going-To-Walk/chatbot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HSU-The-Path-We-Are-Going-To-Walk/chatbot/issues"
+  },
+  "homepage": "https://github.com/HSU-The-Path-We-Are-Going-To-Walk/chatbot#readme",
+  "description": ""
+}
