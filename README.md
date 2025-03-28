@@ -28,8 +28,7 @@
 
 1. 저장소 클론
    ```bash
-   git clone https://github.com/HSU-The-Path-We-Are-Going-To-Walk/emergency-button.git
-   cd emergency-button
+   git clone https://github.com/HSU-The-Path-We-Are-Going-To-Walk/chatbot.git
    ```
 
 2. Docker Compose로 실행
