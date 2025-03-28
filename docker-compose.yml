@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  chatbot:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
+    env_file:
+      - .env
+    restart: unless-stopped
+    command: python -m api 
