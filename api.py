@@ -1,7 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from typing import Union, List
+from typing import Union, List, Optional, Dict
 
 from dto import (
     ChatRequest, GeneralResponse, LocationInfo, 
@@ -9,6 +9,7 @@ from dto import (
 )
 from main import ChatbotApp
 from prompt_manager import PromptManager
+from external_apis.bus_arrive_time import get_bus_arrival_info
 
 app = FastAPI(title="고흥 AI 챗봇 API")
 
@@ -163,6 +164,26 @@ async def chat(request: ChatRequest):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/bus", response_model=List[Dict[str, Union[str, int]]])
+async def get_bus_arrival():
+    """
+    특정 정류장의 버스 도착 정보를 조회합니다.
+    
+    - **city_code**: 도시 코드 (기본값: 36350)
+    - **node_id**: 정류장 ID (기본값: TSB332000523)
+    """
+    try:
+        # 기본값을 사용하여 버스 도착 정보 가져오기
+        bus_arrivals = get_bus_arrival_info()  # 기본값 사용
+        
+        # 결과를 반환할 형식으로 변환
+        result = [{"bus_number": bus[0], "arrival_minutes": bus[1]} for bus in bus_arrivals]
+        
+        return result
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 if __name__ == "__main__":
     uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True) 
