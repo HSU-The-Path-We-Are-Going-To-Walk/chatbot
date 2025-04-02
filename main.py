@@ -1,5 +1,4 @@
 # main.py - 메인 애플리케이션 파일
-from datetime import datetime
 import time
 
 from modules.config import LLM, DATABASE
@@ -17,7 +16,6 @@ class ChatbotApp:
     def __init__(self):
         self.session_id = "abc123"
         self.last_interaction_time = time.time()
-        self.current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.history_manager = ChatHistoryManager()
         self.rag_manager = None
         self.intent_processor = None
@@ -27,7 +25,6 @@ class ChatbotApp:
     
     def initialize_modules(self):
         """모든 필요한 모듈을 초기화합니다."""
-        print(f"현재 날짜 및 시간: {self.current_date}")
         
         try:
             # 모듈 초기화
@@ -35,7 +32,7 @@ class ChatbotApp:
             self.path_finder = PathFinder()
             self.place_searcher = PlaceSearcher()
             self.bus_route_manager = BusRouteManager(self.path_finder)
-            self.rag_manager = RAGChainManager(LLM, DATABASE, self.current_date, self.history_manager.get_session_history)
+            self.rag_manager = RAGChainManager(LLM, DATABASE, self.history_manager.get_session_history)
             
             print("✅ 모든 모듈이 성공적으로 초기화되었습니다.")
             return True

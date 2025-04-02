@@ -14,4 +14,5 @@ langchain-pinecone==0.2.3
 pinecone-client==3.0.2
 langchain-community==0.3.18
 PyMySQL==1.1.1
+pytz==2025.2
 ko_core_news_sm @ https://github.com/explosion/spacy-models/releases/download/ko_core_news_sm-3.7.0/ko_core_news_sm-3.7.0-py3-none-any.whl#sha256=b1a15a4987a8f9835031a6bd2fe57fe158097ab5304221c41df1bd4aab8cf458
