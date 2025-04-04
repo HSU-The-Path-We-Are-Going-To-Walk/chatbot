@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from typing import Union, List, Optional, Dict
+import uuid
 
 from dto import (
     ChatRequest, GeneralResponse, LocationInfo, 
@@ -27,16 +28,43 @@ chatbot = ChatbotApp()
 if not chatbot.initialize_modules():
     raise Exception("챗봇 초기화 실패")
 
+# 현재 활성화된 세션 ID 저장
+active_sessions = set()
+
+@app.post("/start")
+async def start_session():
+    """새로운 세션을 시작합니다. 이미 세션이 있다면 무시합니다."""
+    if active_sessions:
+        return
+    
+    session_id = str(uuid.uuid4())
+    active_sessions.add(session_id)
+
+@app.post("/reset")
+async def reset_session():
+    """현재 세션을 초기화합니다."""
+    # 새로운 세션 ID 생성
+    new_session_id = str(uuid.uuid4())
+    active_sessions.clear()  # 기존 세션 모두 제거
+    active_sessions.add(new_session_id)
+    
+    # 챗봇의 대화 기록 초기화
+    chatbot.history_manager.reset_session(chatbot.session_id)
+    chatbot.session_id = new_session_id
+
 @app.post("/chat", response_model=Union[GeneralResponse, LocationInfo, PathInfo, BusInfo])
 async def chat(request: ChatRequest):
     try:
-        # 사용자 입력 처리
+        # 세션 ID 유효성 검증
         if request.session_id:
+            # 첫 요청이면 세션 ID를 활성 세션 목록에 추가
+            if request.session_id not in active_sessions:
+                active_sessions.add(request.session_id)
+            
             chatbot.session_id = request.session_id
             
         # 의도 처리는 동일하게 진행
         intent, destination = chatbot.intent_processor.detect_intent_and_extract_destination(request.message)
-        
         print(f"감지된 의도: {intent}, 목적지: {destination}")
         
         # 일반 대화
