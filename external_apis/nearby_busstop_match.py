@@ -8,12 +8,12 @@ load_dotenv()
 
 SERVICE_KEY = os.getenv("SERVICE_KEY")
 
-# MySQL 연결 정보
+# MySQL 연결 정보 - Docker Compose 환경에 맞게 수정
 DB_CONFIG = {
-    "host": os.getenv("DB_HOST"),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASSWORD"),
-    "database": os.getenv("DB_NAME"),
+    "host": os.getenv("DB_HOST", "mysql"),  # Docker Compose에서는 서비스 이름으로 접근
+    "user": os.getenv("DB_USER", "root"),
+    "password": os.getenv("DB_PASSWORD", "12345678"),
+    "database": os.getenv("DB_NAME", "busstop"),
     "charset": "utf8mb4"
 }
 

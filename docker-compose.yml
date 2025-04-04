@@ -14,3 +14,20 @@ services:
       - .env
     restart: unless-stopped
     command: python -m api 
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=12345678
+      - MYSQL_DATABASE=busstop
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
+volumes:
+  mysql_data: 

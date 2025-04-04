@@ -13,5 +13,5 @@ LLM = ChatOpenAI(model="gpt-4o")
 EMBEDDING = OpenAIEmbeddings(model="text-embedding-3-large")
 
 # 🔹 Pinecone 벡터 DB 인덱스
-INDEX_NAME = "goheung-notice"
+INDEX_NAME = "hj-goheung-notice"
 DATABASE = PineconeVectorStore.from_existing_index(index_name=INDEX_NAME, embedding=EMBEDDING)
