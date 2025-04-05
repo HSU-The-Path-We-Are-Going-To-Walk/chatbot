@@ -206,7 +206,7 @@ async def get_bus_arrival():
         bus_arrivals = get_bus_arrival_info()  # 기본값 사용
         
         # 결과를 반환할 형식으로 변환
-        result = [{"bus_number": bus[0], "arrival_minutes": bus[1]} for bus in bus_arrivals]
+        result = [{"bus_number": bus[0], "arrival_minutes": bus[1], "prev_count": bus[2]} for bus in bus_arrivals]
         
         return result
     

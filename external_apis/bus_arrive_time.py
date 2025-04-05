@@ -52,9 +52,9 @@ def get_bus_arrival_info(city_code='36350', node_id='TSB332000523', page_no='1',
             bus_arrivals.append((bus_number, arrival_minutes, prev_count))
             
         # 더미 데이터 => 시연 목적
-        bus_arrivals.append((110, 10, 3))
-        bus_arrivals.append((111, 15, 5))
-        bus_arrivals.append((112, 5, 1))
+        bus_arrivals.append(("110", 10, 3))
+        bus_arrivals.append(("111", 15, 5))
+        bus_arrivals.append(("112", 5, 1))
         
         bus_arrivals.sort(key=lambda x: x[1])
     except Exception as e:
