@@ -68,7 +68,7 @@ def extract_route_text(response_json):
             original_line = leg.get("route", "")
             
             if mode in {"WALK"}:
-                route_desc = f"{start_name}에서 {end_name}까지 도보로 이용"
+                route_desc = f"{start_name}에서 {end_name}까지 도보로 이동"
             else:
                 route_desc = f"{start_name}에서 {end_name}까지 {original_line} 이용"
 

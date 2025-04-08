@@ -89,7 +89,7 @@ class PathFinder:
             for idx, item in enumerate(route_data, start=1):
                 if isinstance(item, tuple) and len(item) == 2:
                     description, coords = item
-                    routes.append(f"{idx}. {description}")
+                    routes.append(f"{idx}. {description}.")
                     
                     # 각 좌표 쌍을 배열로 추가
                     for coord_pair in coords:
