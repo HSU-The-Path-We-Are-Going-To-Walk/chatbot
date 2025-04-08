@@ -8,6 +8,9 @@
 - 크게 장소 관련 질문, 일상 대화 질문으로 나뉘어짐
 - 장소 관련: 버스 도착 정보, 길찾기, 장소 찾기, 버스 노선
 - 일상 대화 질문(공지 관련 질문)은 고흥시 공지사항들을 Retrieve 하여 답변 생성
+  
+  <img width="1396" alt="image" src="https://github.com/user-attachments/assets/8371a71d-0101-4a23-8495-7ff136e095d6" />
+
 
 ## 기술 스택
 
