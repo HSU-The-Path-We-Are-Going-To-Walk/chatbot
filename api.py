@@ -31,7 +31,7 @@ if not chatbot.initialize_modules():
 # 현재 활성화된 세션 ID 저장
 active_sessions = set()
 
-@app.post("/start")
+@app.post("/sessionStart")
 async def start_session():
     """새로운 세션을 시작합니다. 이미 세션이 있다면 무시합니다."""
     if active_sessions:
@@ -40,7 +40,7 @@ async def start_session():
     session_id = str(uuid.uuid4())
     active_sessions.add(session_id)
 
-@app.post("/reset")
+@app.post("/sessionReset")
 async def reset_session():
     """현재 세션을 초기화합니다."""
     # 새로운 세션 ID 생성

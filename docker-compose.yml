@@ -4,7 +4,7 @@ services:
   chatbot:
     build: .
     ports:
-      - "8000:8000"
+      - "9000:8000"
     volumes:
       - .:/app
     environment:
@@ -20,7 +20,9 @@ services:
   mysql:
     image: mysql:8.0
     ports:
-      - "3306:3306"
+      - "3307:3306"
+    platform:
+      - linux/amd64
     environment:
       - MYSQL_ROOT_PASSWORD=12345678
       - MYSQL_DATABASE=busstop
