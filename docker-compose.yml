@@ -21,8 +21,7 @@ services:
     image: mysql:8.0
     ports:
       - "3307:3306"
-    platform:
-      - linux/amd64
+    platform: linux/amd64
     environment:
       - MYSQL_ROOT_PASSWORD=12345678
       - MYSQL_DATABASE=busstop
