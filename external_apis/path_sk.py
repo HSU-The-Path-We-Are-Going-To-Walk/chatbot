@@ -69,6 +69,9 @@ def extract_route_text(response_json):
             
             if mode in {"WALK"}:
                 route_desc = f"{start_name}에서 {end_name}까지 도보로 이동"
+            elif mode == "BUS":
+                # 버스 번호 뒤에 "번 버스" 추가
+                route_desc = f"{start_name}에서 {end_name}까지 {original_line}번 버스 이용"
             else:
                 route_desc = f"{start_name}에서 {end_name}까지 {original_line} 이용"
 
